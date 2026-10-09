@@ -1,0 +1,27 @@
+#!/bin/bash
+#PBS -N psychids.geoReMappingRefBuild.apr2026
+#PBS -l select=1:ncpus=1:mem=4gb:scratch_local=50gb
+#PBS -l walltime=00:30:00
+#PBS -o /storage/plzen1/home/pedroribeiro/postPhd/projects/psychids/repeatExplorer/mapping/geo/out/geoReMappingRefBuild.txt
+#PBS -e /storage/plzen1/home/pedroribeiro/postPhd/projects/psychids/repeatExplorer/mapping/geo/err/geoReMappingRefBuild.txt
+
+set -euo pipefail
+
+trap 'clean_scratch' TERM EXIT
+
+##### system specific definitions #####
+cd $SCRATCHDIR || exit 1
+export TMPDIR=$SCRATCHDIR
+
+Ref="/storage/brno12-cerit/home/pedroribeiro/PostPhd/projects/psychids/repeatExplorer/REclustering/geo/out/PSYgeoConcatenated/output/seqclust/clustering/clusters/mappingRef/geoConcatenatedRef.fasta"
+OutRef="/storage/brno12-cerit/home/pedroribeiro/PostPhd/projects/psychids/repeatExplorer/mapping/geo/out/refBuild"
+
+mkdir -p "${OutRef}"
+
+rsync -a "${Ref}" "$SCRATCHDIR/"
+
+# Build bowtie2 index
+module add bowtie2
+bowtie2-build geoConcatenatedRef.fasta geoConcatenatedRef
+
+rsync -a "$SCRATCHDIR/" "${OutRef}/"
